@@ -1,0 +1,38 @@
+import { IDatabaseDriver } from './IDatabaseDriver';
+import { EntityData, EntityMetadata, EntityProperty, FilterQuery, AnyEntity, Primary, Dictionary } from '../typings';
+import { MetadataStorage } from '../metadata';
+import { Connection, QueryResult, Transaction } from '../connections';
+import { Configuration, ConnectionOptions } from '../utils';
+import { QueryOrderMap } from '../query';
+import { Platform } from '../platforms';
+import { LockMode } from '../unit-of-work';
+export declare abstract class DatabaseDriver<C extends Connection> implements IDatabaseDriver<C> {
+    protected readonly config: Configuration;
+    protected readonly dependencies: string[];
+    protected readonly connection: C;
+    protected readonly replicas: C[];
+    protected readonly platform: Platform;
+    protected readonly logger: import("../utils").Logger;
+    protected metadata: MetadataStorage;
+    protected constructor(config: Configuration, dependencies: string[]);
+    abstract find<T extends AnyEntity<T>>(entityName: string, where: FilterQuery<T>, populate?: string[], orderBy?: QueryOrderMap, fields?: string[], limit?: number, offset?: number, ctx?: Transaction): Promise<T[]>;
+    abstract findOne<T extends AnyEntity<T>>(entityName: string, where: FilterQuery<T>, populate: string[], orderBy?: QueryOrderMap, fields?: string[], lockMode?: LockMode, ctx?: Transaction): Promise<T | null>;
+    abstract nativeInsert<T extends AnyEntity<T>>(entityName: string, data: EntityData<T>, ctx?: Transaction): Promise<QueryResult>;
+    abstract nativeUpdate<T extends AnyEntity<T>>(entityName: string, where: FilterQuery<T>, data: EntityData<T>, ctx?: Transaction): Promise<QueryResult>;
+    abstract nativeDelete<T extends AnyEntity<T>>(entityName: string, where: FilterQuery<T>, ctx?: Transaction): Promise<QueryResult>;
+    abstract count<T extends AnyEntity<T>>(entityName: string, where: FilterQuery<T>, ctx?: Transaction): Promise<number>;
+    aggregate(entityName: string, pipeline: any[]): Promise<any[]>;
+    loadFromPivotTable<T extends AnyEntity<T>>(prop: EntityProperty, owners: Primary<T>[], where?: FilterQuery<T>, orderBy?: QueryOrderMap, ctx?: Transaction): Promise<Dictionary<T[]>>;
+    mapResult<T extends AnyEntity<T>>(result: EntityData<T>, meta: EntityMetadata): T | null;
+    connect(): Promise<C>;
+    reconnect(): Promise<C>;
+    getConnection(type?: 'read' | 'write'): C;
+    close(force?: boolean): Promise<void>;
+    getPlatform(): Platform;
+    setMetadata(metadata: MetadataStorage): void;
+    getDependencies(): string[];
+    protected getPivotOrderBy(prop: EntityProperty, orderBy?: QueryOrderMap): QueryOrderMap;
+    protected getPrimaryKeyField(entityName: string): string;
+    protected getPivotInverseProperty(prop: EntityProperty): EntityProperty;
+    protected createReplicas(cb: (c: ConnectionOptions) => C): C[];
+}
