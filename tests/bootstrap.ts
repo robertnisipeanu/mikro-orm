@@ -55,7 +55,7 @@ export async function initORMMySql<D extends MySqlDriver | MariaDbDriver = MySql
     dbName: `mikro_orm_test`,
     user: `root`,
     password: `test`,
-    port: process.env.ORM_PORT ? +process.env.ORM_PORT : 3307,
+    port: process.env.ORM_PORT ? +process.env.ORM_PORT : 3306,
     baseDir: BASE_DIR,
     debug: ['query'],
     highlight: false,
